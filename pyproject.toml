@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "friendly-telegram-bot"
+version = "0.1.0"
+description = ""
+authors = ["Daria Baranova <mouseice@ya.ru>"]
+readme = "README.md"
+packages = [{include = "friendly_telegram_bot"}]
+
+[tool.poetry.dependencies]
+python = "3.8.10"
+pre-commit = "^3.2.2"
+pylint = "^2.17.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
