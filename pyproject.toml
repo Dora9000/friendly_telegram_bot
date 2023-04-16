@@ -10,6 +10,7 @@ packages = [{include = "friendly_telegram_bot"}]
 python = "3.8.10"
 pre-commit = "^3.2.2"
 pylint = "^2.17.2"
+aiogram = "3.0.0b7"
 
 
 [build-system]
