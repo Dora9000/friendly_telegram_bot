@@ -1,10 +1,12 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher, Router, types, F
+from aiogram import Bot
+from aiogram import Dispatcher
+
+import settings
 from handlers.photo import router as image_router
 from handlers.start import router as start_router
-import settings
 
 
 bot = Bot(settings.BOT_TOKEN, parse_mode="HTML")

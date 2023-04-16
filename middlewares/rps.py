@@ -1,13 +1,11 @@
-import asyncio
 import datetime
-from typing import Union, List, Callable, Dict, Any, Awaitable
-
-from aiogram import types, BaseMiddleware
+from typing import Any
+from typing import Awaitable
+from typing import Callable
+from typing import Dict
 
 from aiogram import BaseMiddleware
-from aiogram.dispatcher.event.bases import CancelHandler
 from aiogram.types import Message
-
 
 
 class RPSMiddleware(BaseMiddleware):
@@ -15,12 +13,11 @@ class RPSMiddleware(BaseMiddleware):
         self._last_request = {}
         self._blocked = {}
 
-
     async def __call__(
         self,
         handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
         event: Message,
-        data: Dict[str, Any]
+        data: Dict[str, Any],
     ) -> Any:
         now = datetime.datetime.utcnow()
         user_id = event.from_user.id
@@ -28,7 +25,6 @@ class RPSMiddleware(BaseMiddleware):
         #  TODO: lock by user_id
 
         if event.photo:  # or event.document
-
             last_timestamp = self._last_request.get(user_id)
             self._last_request[user_id] = now
 
@@ -43,4 +39,3 @@ class RPSMiddleware(BaseMiddleware):
                 self._blocked[user_id] = False
 
         return await handler(event, data)
-
