@@ -4,14 +4,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
 
-from utils import commit
+from bot.entities.base_validator import BaseValidator
+from bot.utils import commit
 
 
 class BaseManager:
     model: DeclarativeMeta
+    validator_model: BaseValidator = BaseValidator
 
     def __init__(self, session: AsyncSession) -> None:
         self._conn: AsyncSession = session
+        self.validator = self.validator_model(session=session, model=self.model)
 
     def to_dict(self, entity, exclude_none: bool = False) -> dict:
         return {

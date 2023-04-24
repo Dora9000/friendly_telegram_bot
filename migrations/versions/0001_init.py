@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2023-04-24 13:13:32.435762
+Create Date: 2023-04-24 15:28:31.038808
 
 """
 import sqlalchemy as sa
@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("width", sa.Integer(), nullable=False),
         sa.Column("file_size", sa.Integer(), nullable=False),
         sa.Column(
-            "created", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+            "created", sa.DateTime(), server_default=sa.text("now()"), nullable=True
         ),
         sa.Column("prompt", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -39,7 +39,7 @@ def upgrade() -> None:
         sa.Column("first_name", sa.String(), nullable=True),
         sa.Column("username", sa.String(), nullable=True),
         sa.Column(
-            "created", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+            "created", sa.DateTime(), server_default=sa.text("now()"), nullable=True
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("id"),
@@ -52,7 +52,7 @@ def upgrade() -> None:
         sa.Column("result_photo_id", sa.String(), nullable=True),
         sa.Column("status", sa.String(), nullable=False),
         sa.Column(
-            "created", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+            "created", sa.DateTime(), server_default=sa.text("now()"), nullable=True
         ),
         sa.ForeignKeyConstraint(["photo_id"], ["photos.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),

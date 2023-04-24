@@ -1,14 +1,16 @@
 from aiogram.types import PhotoSize
 from sqlalchemy import insert
 
-from .base_manager import BaseManager
-from db import Photo
-from db import PhotoToUser
-from utils import commit
+from bot.db import Photo
+from bot.db import PhotoToUser
+from bot.entities.base_manager import BaseManager
+from bot.entities.photo.validator import PhotoValidator
+from bot.utils import commit
 
 
 class PhotoManager(BaseManager):
     model = Photo
+    validator_model = PhotoValidator
 
     @commit
     async def add_photo_for_user(

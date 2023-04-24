@@ -8,9 +8,9 @@ from aiogram.types import Message
 from aiogram.types import PhotoSize
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import User
-from entities.photo import PhotoManager
-from entities.user import UserManager
+from bot.db.models import User
+from bot.entities.photo.manager import PhotoManager
+from bot.entities.user.manager import UserManager
 
 router = Router()
 
@@ -56,12 +56,10 @@ async def download_photo(
         f"image {largest_photo.file_id} saved: {largest_photo.width}, {largest_photo.height}"
     )
 
-    if not message.caption:
-        return await message.reply(f"No caption was found. Generation will not start.")
+    PhotoManager(session).validator.validate_caption(message.caption)
 
     await PhotoManager(session).add_photo_for_user(
         user_id=user.id, photo=largest_photo, prompt=message.caption
     )
 
     return await message.reply(f"Image saved with caption '{message.caption}'.")
-    # return await message.reply_photo(largest_photo.file_id, caption=f"Image saved with caption '{message.caption}'.")
