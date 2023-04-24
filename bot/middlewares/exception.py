@@ -6,7 +6,9 @@ from typing import Dict
 from aiogram import BaseMiddleware
 from aiogram.types import Update
 
+from bot.exceptions import DownloadTimeoutException
 from bot.exceptions import NoCaptionException
+from bot.exceptions import TooManyRequestsException
 
 
 class ExceptionMiddleware(BaseMiddleware):
@@ -17,10 +19,16 @@ class ExceptionMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         try:
-            await handler(event, data)
+            return await handler(event, data)
 
         except NoCaptionException as e:
-            return event.message.reply(e.detail)
+            return await event.message.reply(e.detail)
+
+        except TooManyRequestsException as e:
+            return await event.message.reply(e.detail)
+
+        except DownloadTimeoutException as e:
+            return await event.message.reply(e.detail)
 
         except Exception as e:
             raise e

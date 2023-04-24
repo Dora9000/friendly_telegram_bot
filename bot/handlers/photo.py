@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db.models import User
 from bot.entities.photo.manager import PhotoManager
+from bot.entities.photo_to_user.manager import PhotoToUserManager
 from bot.entities.user.manager import UserManager
+from bot.exceptions import DownloadTimeoutException
 
 router = Router()
 
@@ -36,10 +38,12 @@ async def download_photo(
     session: AsyncSession,
     **kwargs,
 ):
-    user = await UserManager(session).get_entity(filters={"id": message.from_user.id})
+    user = await UserManager(session).queries.get_entity(
+        filters={"id": message.from_user.id}
+    )
 
-    if not user or True:
-        user = await UserManager(session).create(
+    if not user:
+        user = await UserManager(session).queries.create(
             entity=User(
                 id=message.from_user.id,
                 first_name=message.from_user.first_name,
@@ -47,16 +51,17 @@ async def download_photo(
             )
         )
 
+    PhotoManager(session).validator.validate_caption(message.caption)
+    await PhotoToUserManager(session).validator.validate_photos_count(user_id=user.id)
+
     try:
         await asyncio.wait_for(_download(photo=largest_photo, bot=bot), timeout=15.0)
     except asyncio.TimeoutError:
-        return await message.reply("Image saving timeout.")
+        raise DownloadTimeoutException()
 
     logging.info(
         f"image {largest_photo.file_id} saved: {largest_photo.width}, {largest_photo.height}"
     )
-
-    PhotoManager(session).validator.validate_caption(message.caption)
 
     await PhotoManager(session).add_photo_for_user(
         user_id=user.id, photo=largest_photo, prompt=message.caption

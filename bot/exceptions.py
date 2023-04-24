@@ -4,3 +4,7 @@ class NoCaptionException(BaseException):
 
 class TooManyRequestsException(BaseException):
     detail = "You have done too many requests. Please wait until some generation will be finished."
+
+
+class DownloadTimeoutException(BaseException):
+    detail = "Image saving timeout."
