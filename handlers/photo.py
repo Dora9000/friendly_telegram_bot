@@ -1,13 +1,18 @@
 import asyncio
+import logging
 
 from aiogram import Bot
 from aiogram import F
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.types import PhotoSize
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from db.models import User
+from entities.photo import PhotoManager
+from entities.user import UserManager
 
 router = Router()
-# router.message.middleware(RPSMiddleware())
 
 
 async def _download(photo: PhotoSize, bot: Bot) -> None:
@@ -24,14 +29,39 @@ async def _download(photo: PhotoSize, bot: Bot) -> None:
 
 
 @router.message(F.photo[-1].as_("largest_photo"))
-async def download_photo(message: Message, bot: Bot, largest_photo: PhotoSize):
+async def download_photo(
+    message: Message,
+    bot: Bot,
+    largest_photo: PhotoSize,
+    session: AsyncSession,
+    **kwargs,
+):
+    user = await UserManager(session).get_entity(filters={"id": message.from_user.id})
+
+    if not user or True:
+        user = await UserManager(session).create(
+            entity=User(
+                id=message.from_user.id,
+                first_name=message.from_user.first_name,
+                username=message.from_user.username,
+            )
+        )
+
     try:
         await asyncio.wait_for(_download(photo=largest_photo, bot=bot), timeout=15.0)
     except asyncio.TimeoutError:
         return await message.reply("Image saving timeout.")
 
-    print(
+    logging.info(
         f"image {largest_photo.file_id} saved: {largest_photo.width}, {largest_photo.height}"
     )
+
+    if not message.caption:
+        return await message.reply(f"No caption was found. Generation will not start.")
+
+    await PhotoManager(session).add_photo_for_user(
+        user_id=user.id, photo=largest_photo, prompt=message.caption
+    )
+
     return await message.reply(f"Image saved with caption '{message.caption}'.")
     # return await message.reply_photo(largest_photo.file_id, caption=f"Image saved with caption '{message.caption}'.")
