@@ -13,6 +13,7 @@ from bot.entities.photo.manager import PhotoManager
 from bot.entities.photo_to_user.manager import PhotoToUserManager
 from bot.entities.user.manager import UserManager
 from bot.exceptions import DownloadTimeoutException
+from bot.queue.producer import GenerationProducer
 
 router = Router()
 
@@ -66,5 +67,16 @@ async def download_photo(
     await PhotoManager(session).add_photo_for_user(
         user_id=user.id, photo=largest_photo, prompt=message.caption
     )
+    msg = await message.reply(f"Image saved with caption '{message.caption}'.")
 
-    return await message.reply(f"Image saved with caption '{message.caption}'.")
+    await GenerationProducer().send(
+        data={
+            "file_name": "inputs/bike.jpg",
+            "prompt": "photo of a bike",
+            "file_id": 123,
+        }
+    )
+
+    return await bot.edit_message_text(
+        text="Generation started.", chat_id=msg.chat.id, message_id=msg.message_id
+    )
