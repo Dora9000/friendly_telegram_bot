@@ -4,8 +4,10 @@ from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import func
 from sqlalchemy import Integer
+from sqlalchemy import Numeric
 from sqlalchemy import String
 
+from ..constants import StatusEnum
 from .base import Base
 
 
@@ -15,6 +17,8 @@ class User(Base):
     id = Column(BigInteger, primary_key=True, unique=True, autoincrement=False)
     first_name = Column(String, nullable=True)
     username = Column(String, nullable=True)
+    init_k = Column(Numeric(precision=5, scale=2), nullable=True)
+    grad_k = Column(Numeric(precision=5, scale=2), nullable=True)
     created = Column(DateTime(timezone=False), server_default=func.now())
 
 
@@ -27,8 +31,8 @@ class Photo(Base):
     height = Column(Integer, nullable=False)
     width = Column(Integer, nullable=False)
     file_size = Column(Integer, nullable=False)
-    created = Column(DateTime(timezone=False), server_default=func.now())
     prompt = Column(String, nullable=False)
+    created = Column(DateTime(timezone=False), server_default=func.now())
 
 
 class PhotoToUser(Base):
@@ -41,6 +45,8 @@ class PhotoToUser(Base):
     photo_id = Column(
         BigInteger, ForeignKey("photos.id", ondelete="CASCADE"), nullable=False
     )
-    result_photo_id = Column(String, nullable=True)
-    status = Column(String, nullable=False, default="pending")
+    result_photo_name = Column(String, nullable=True)
+    status = Column(String, nullable=False, default=StatusEnum.PENDING.value)
+    chat_id = Column(BigInteger, nullable=False)
+    message_id = Column(BigInteger, nullable=False)
     created = Column(DateTime(timezone=False), server_default=func.now())

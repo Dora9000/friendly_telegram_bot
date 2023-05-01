@@ -1,6 +1,3 @@
-import asyncio
-import logging
-
 from aiogram import Bot
 from aiogram import F
 from aiogram import Router
@@ -8,75 +5,52 @@ from aiogram.types import Message
 from aiogram.types import PhotoSize
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.db.models import User
+from bot.constants import GRAD_K
+from bot.constants import INIT_K
+from bot.constants import StatusEnum
 from bot.entities.photo.manager import PhotoManager
 from bot.entities.photo_to_user.manager import PhotoToUserManager
 from bot.entities.user.manager import UserManager
-from bot.exceptions import DownloadTimeoutException
 from bot.queue.producer import GenerationProducer
 
 router = Router()
 
 
-async def _download(photo: PhotoSize, bot: Bot) -> None:
-    file = None
-    while not file:
-        try:
-            await asyncio.wait_for(
-                bot.download(photo, destination=f"inputs/{photo.file_id}.jpg"),
-                timeout=3.0,
-            )
-            file = True
-        except asyncio.TimeoutError:
-            pass
-
-
 @router.message(F.photo[-1].as_("largest_photo"))
 async def download_photo(
-    message: Message,
-    bot: Bot,
-    largest_photo: PhotoSize,
-    session: AsyncSession,
-    **kwargs,
+    message: Message, bot: Bot, largest_photo: PhotoSize, session: AsyncSession
 ):
-    user = await UserManager(session).queries.get_entity(
-        filters={"id": message.from_user.id}
-    )
-
-    if not user:
-        user = await UserManager(session).queries.create(
-            entity=User(
-                id=message.from_user.id,
-                first_name=message.from_user.first_name,
-                username=message.from_user.username,
-            )
-        )
+    user = await UserManager(session).get_or_create_user(message)
 
     PhotoManager(session).validator.validate_caption(message.caption)
     await PhotoToUserManager(session).validator.validate_photos_count(user_id=user.id)
 
-    try:
-        await asyncio.wait_for(_download(photo=largest_photo, bot=bot), timeout=15.0)
-    except asyncio.TimeoutError:
-        raise DownloadTimeoutException()
-
-    logging.info(
-        f"image {largest_photo.file_id} saved: {largest_photo.width}, {largest_photo.height}"
-    )
+    filename = await PhotoManager(session).download(bot, largest_photo)
+    msg = await message.reply(f"Image saved with caption '{message.caption}'.")
 
     await PhotoManager(session).add_photo_for_user(
-        user_id=user.id, photo=largest_photo, prompt=message.caption
+        message=msg, user_id=user.id, photo=largest_photo, prompt=message.caption
     )
-    msg = await message.reply(f"Image saved with caption '{message.caption}'.")
 
     await GenerationProducer().send(
         data={
-            "file_name": "inputs/bike.jpg",
-            "prompt": "photo of a bike",
-            "file_id": 123,
+            "file_name": filename,
+            "prompt": message.caption,
+            "reply_chat_id": msg.chat.id,
+            "grad_k": user.grad_k or GRAD_K,
+            "init_k": user.init_k or INIT_K,
+            "file_id": largest_photo.file_id,
+            "reply_message_id": msg.message_id,
         }
     )
-
+    await PhotoToUserManager(session).queries.update(
+        values={"status": StatusEnum.RUNNING},
+        filters={
+            "chat_id": msg.chat.id,
+            "message_id": msg.message_id,
+            "status": StatusEnum.PENDING,
+        },
+    )
     return await bot.edit_message_text(
         text="Generation started.", chat_id=msg.chat.id, message_id=msg.message_id
     )

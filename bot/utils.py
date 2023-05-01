@@ -1,6 +1,11 @@
 import logging
+import os
 
+from paramiko import SSHClient
+from scp import SCPClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from bot import settings
 
 
 class Singleton(type):
@@ -48,13 +53,37 @@ async def save_commit(session: AsyncSession):
         logging.error(e)
 
 
-import contextlib
+def upload_to_server(input_filename: str) -> None:
+    assert os.path.isfile(f"{settings.LOCAL_INPUTS_DIR}/{input_filename}")
+
+    with SSHClient() as ssh:
+        ssh.load_system_host_keys()
+        ssh.connect(
+            settings.SERVER_HOST,
+            port=settings.SERVER_PORT,
+            username=settings.SERVER_USER,
+        )
+
+        with SCPClient(ssh.get_transport()) as scp:
+            scp.put(
+                files=f"{settings.LOCAL_INPUTS_DIR}/{input_filename}",
+                remote_path=settings.SERVER_INPUTS_DIR,
+            )
 
 
-@contextlib.contextmanager
-def transaction(session):
-    if not session.in_transaction():
-        with session.begin():
-            yield
-    else:
-        yield
+def download_from_server(output_filename: str) -> str:
+    with SSHClient() as ssh:
+        ssh.load_system_host_keys()
+        ssh.connect(
+            settings.SERVER_HOST,
+            port=settings.SERVER_PORT,
+            username=settings.SERVER_USER,
+        )
+
+        with SCPClient(ssh.get_transport()) as scp:
+            scp.get(
+                remote_path=f"{settings.SERVER_OUTPUTS_DIR}/{output_filename}",
+                local_path=settings.LOCAL_OUTPUTS_DIR,
+            )
+
+            return f"{settings.LOCAL_OUTPUTS_DIR}/{output_filename}"

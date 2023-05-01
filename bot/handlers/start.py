@@ -8,4 +8,4 @@ router = Router()
 
 @router.message(Command(commands=["start"]))
 async def command_start_handler(message: Message) -> None:
-    await message.answer(f"Hello, <b>{message.from_user.full_name}!</b>")
+    await message.answer(f"Hello, {message.from_user.full_name}!")

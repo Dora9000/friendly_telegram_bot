@@ -14,10 +14,15 @@ class GenerationProducer(metaclass=Singleton):
         self.default_routing_key = RabbitmqData.generation.default_queue
 
     def _data_wrapper(self, data: dict) -> dict:
-        # message_id
-        # prompt
-        #
-        return {**data, "message_id": uuid.uuid4().hex}
+        init_k = data.pop("init_k")
+        grad_k = data.pop("grad_k")
+
+        return {
+            **data,
+            "message_id": uuid.uuid4().hex,
+            "init_k": str(init_k),
+            "grad_k": str(grad_k),
+        }
 
     async def send(self, data: dict) -> None:
         message = json.dumps(self._data_wrapper(data)).encode("utf-8")

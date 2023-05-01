@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2023-04-24 15:28:31.038808
+Create Date: 2023-05-01 18:06:52.673050
 
 """
 import sqlalchemy as sa
@@ -26,10 +26,10 @@ def upgrade() -> None:
         sa.Column("height", sa.Integer(), nullable=False),
         sa.Column("width", sa.Integer(), nullable=False),
         sa.Column("file_size", sa.Integer(), nullable=False),
+        sa.Column("prompt", sa.String(), nullable=False),
         sa.Column(
             "created", sa.DateTime(), server_default=sa.text("now()"), nullable=True
         ),
-        sa.Column("prompt", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("id"),
     )
@@ -38,6 +38,8 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), autoincrement=False, nullable=False),
         sa.Column("first_name", sa.String(), nullable=True),
         sa.Column("username", sa.String(), nullable=True),
+        sa.Column("init_k", sa.Numeric(precision=5, scale=2), nullable=True),
+        sa.Column("grad_k", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.Column(
             "created", sa.DateTime(), server_default=sa.text("now()"), nullable=True
         ),
@@ -49,8 +51,10 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("photo_id", sa.BigInteger(), nullable=False),
-        sa.Column("result_photo_id", sa.String(), nullable=True),
+        sa.Column("result_photo_name", sa.String(), nullable=True),
         sa.Column("status", sa.String(), nullable=False),
+        sa.Column("chat_id", sa.BigInteger(), nullable=False),
+        sa.Column("message_id", sa.BigInteger(), nullable=False),
         sa.Column(
             "created", sa.DateTime(), server_default=sa.text("now()"), nullable=True
         ),

@@ -8,3 +8,15 @@ class TooManyRequestsException(BaseException):
 
 class DownloadTimeoutException(BaseException):
     detail = "Image saving timeout."
+
+
+class DownloadErrorException(BaseException):
+    detail = "Image saving error."
+
+
+class ParamFormatException(BaseException):
+    detail = "Invalid parameter format."
+
+
+class ParamValueException(BaseException):
+    detail = "Invalid parameter value."

@@ -6,6 +6,7 @@ from typing import Dict
 from aiogram import BaseMiddleware
 from aiogram.types import Update
 
+from bot.exceptions import DownloadErrorException
 from bot.exceptions import DownloadTimeoutException
 from bot.exceptions import NoCaptionException
 from bot.exceptions import TooManyRequestsException
@@ -28,6 +29,9 @@ class ExceptionMiddleware(BaseMiddleware):
             return await event.message.reply(e.detail)
 
         except DownloadTimeoutException as e:
+            return await event.message.reply(e.detail)
+
+        except DownloadErrorException as e:
             return await event.message.reply(e.detail)
 
         except Exception as e:
